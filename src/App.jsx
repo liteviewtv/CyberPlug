@@ -3,19 +3,25 @@ import { ArrowDownUp, ArrowRight, Check, Headphones, ShieldCheck, Truck } from '
 import { AnimatePresence, motion } from 'framer-motion'
 import Header from './components/Header'
 import ProductGrid from './components/ProductGrid'
+import CartDrawer from './components/CartDrawer'
 import Admin from './Admin'
 
+const readCart=()=>{try{return JSON.parse(localStorage.getItem('cyberplug-cart')||'[]')}catch{return []}}
 export default function App() {
   if (window.location.pathname.startsWith('/admin')) return <Admin />
   const [search,setSearch]=useState(''),[debouncedSearch,setDebouncedSearch]=useState(''),[category,setCategory]=useState('All products'),[sort,setSort]=useState('featured')
-  const [products,setProducts]=useState([]),[loading,setLoading]=useState(true),[cartCount,setCartCount]=useState(0),[toast,setToast]=useState('')
+  const [products,setProducts]=useState([]),[loading,setLoading]=useState(true),[cart,setCart]=useState(readCart),[cartOpen,setCartOpen]=useState(false),[toast,setToast]=useState('')
   useEffect(()=>{const t=setTimeout(()=>setDebouncedSearch(search.trim().toLowerCase()),300);return()=>clearTimeout(t)},[search])
   useEffect(()=>{const controller=new AbortController();fetch('/api/products',{signal:controller.signal}).then(r=>{if(!r.ok)throw new Error('Catalog unavailable');return r.json()}).then(d=>setProducts((d.products||[]).filter(p=>p.status==='active'))).catch(e=>{if(e.name!=='AbortError')console.error(e)}).finally(()=>setLoading(false));return()=>controller.abort()},[])
+  useEffect(()=>{localStorage.setItem('cyberplug-cart',JSON.stringify(cart))},[cart])
   useEffect(()=>{if(!toast)return;const t=setTimeout(()=>setToast(''),2200);return()=>clearTimeout(t)},[toast])
   const categories=useMemo(()=>['All products',...new Set(products.map(p=>p.category).filter(Boolean))],[products])
   const filtered=useMemo(()=>{const result=products.filter(p=>{const text=[p.name,p.description,p.category,...(p.tags||[])].join(' ').toLowerCase();return(!debouncedSearch||text.includes(debouncedSearch))&&(category==='All products'||p.category===category)});if(sort==='price-asc')result.sort((a,b)=>a.price-b.price);if(sort==='price-desc')result.sort((a,b)=>b.price-a.price);if(sort==='newest')result.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));return result},[products,debouncedSearch,category,sort])
-  const addToCart=p=>{setCartCount(c=>c+1);setToast(p.name+' added to your bag')}
-  return <div className="page-shell min-h-screen"><Header search={search} setSearch={setSearch} cartCount={cartCount}/>
+  const addToCart=p=>{setCart(current=>{const found=current.find(x=>x.id===p.id);if(found)return current.map(x=>x.id===p.id?{...x,quantity:Math.min(Number(p.stock)||1,x.quantity+1)}:x);return [...current,{...p,quantity:1}]});setToast(p.name+' added to your bag')}
+  const updateQuantity=(id,quantity)=>setCart(current=>current.map(x=>x.id===id?{...x,quantity}:x).filter(x=>x.quantity>0))
+  const removeFromCart=id=>setCart(current=>current.filter(x=>x.id!==id))
+  const cartCount=cart.reduce((n,p)=>n+p.quantity,0)
+  return <div className="page-shell min-h-screen"><Header search={search} setSearch={setSearch} cartCount={cartCount} onOpenCart={()=>setCartOpen(true)}/>
     <main className="mx-auto max-w-7xl px-4 pb-20 pt-6 sm:px-6 sm:pt-9 lg:px-8">
       <section className="relative mb-12 overflow-hidden rounded-[30px] bg-[#10172a] px-6 py-14 text-white shadow-[0_24px_70px_rgba(15,23,42,.14)] sm:px-12 lg:px-16"><div className="pointer-events-none absolute -right-20 -top-36 h-[34rem] w-[34rem] rounded-full bg-blue-500/20 blur-3xl"/><div className="relative max-w-2xl"><span className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[10px] font-bold uppercase tracking-[.2em] text-blue-200">Welcome to CyberPlug</span><h1 className="mt-7 font-display text-4xl font-bold leading-tight tracking-tight sm:text-6xl">Good finds.<br/><span className="text-blue-300">Better everyday.</span></h1><p className="mt-5 max-w-xl text-sm leading-7 text-slate-300 sm:text-base">Discover products picked for your everyday life. Explore the latest additions and find something you’ll love.</p><a href="#catalog" className="mt-8 inline-flex items-center gap-3 rounded-xl bg-white px-5 py-3.5 text-sm font-bold text-slate-950 hover:bg-blue-100">Explore the store <ArrowRight size={16}/></a></div></section>
       <div className="mb-14 grid gap-5 border-b border-slate-200 pb-8 sm:grid-cols-3"><Benefit icon={<Truck size={19}/>} title="Delivery options" detail="Convenient ways to receive your order"/><Benefit icon={<ShieldCheck size={19}/>} title="Quality you can trust" detail="Product details clearly displayed"/><Benefit icon={<Headphones size={19}/>} title="We're here to help" detail="Support when you need it"/></div>
@@ -24,6 +30,7 @@ export default function App() {
       {loading?<div className="py-20 text-center text-sm text-slate-500">Loading products…</div>:<ProductGrid products={filtered} onAddToCart={addToCart}/>}</section>
       <footer className="mt-16 flex flex-col justify-between gap-3 border-t border-slate-200 pt-6 text-xs text-slate-400 sm:flex-row"><span className="font-display text-sm font-bold text-slate-700">Cyber<span className="text-electric">Plug</span></span><span>© {new Date().getFullYear()} CyberPlug.</span><a href="/admin" className="hover:text-slate-700">Store admin</a></footer>
     </main>
+    <CartDrawer open={cartOpen} onClose={()=>setCartOpen(false)} items={cart} onUpdate={updateQuantity} onRemove={removeFromCart}/>
     <AnimatePresence>{toast&&<motion.div initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} exit={{opacity:0}} className="fixed bottom-5 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-xs font-semibold text-white shadow-2xl"><Check size={15}/>{toast}</motion.div>}</AnimatePresence>
   </div>
 }
