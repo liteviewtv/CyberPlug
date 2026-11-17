@@ -1,20 +1,10 @@
 CREATE TABLE IF NOT EXISTS orders (
   id TEXT PRIMARY KEY,
   order_number TEXT NOT NULL UNIQUE,
-  customer_name TEXT NOT NULL,
-  email TEXT NOT NULL DEFAULT '',
-  phone TEXT NOT NULL,
-  address TEXT NOT NULL,
-  city TEXT NOT NULL,
-  state_region TEXT NOT NULL DEFAULT '',
-  postal_code TEXT NOT NULL DEFAULT '',
-  country TEXT NOT NULL,
-  delivery_notes TEXT NOT NULL DEFAULT '',
+  email TEXT NOT NULL,
   subtotal REAL NOT NULL,
-  shipping_fee REAL NOT NULL DEFAULT 0,
   total REAL NOT NULL,
-  payment_method TEXT NOT NULL DEFAULT 'pay_on_delivery',
-  status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','confirmed','processing','shipped','delivered','cancelled')),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','processing','completed','cancelled')),
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
