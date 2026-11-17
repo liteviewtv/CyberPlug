@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { ArrowUpRight, ShoppingBag } from 'lucide-react'
-const money=n=>new Intl.NumberFormat('en-NG',{style:'currency',currency:'NGN',maximumFractionDigits:0}).format(Number(n)||0)
+const money=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n)||0)
 export default function ProductCard({product,onAddToCart}){
  const out=Number(product.stock)<=0
  return <motion.article layout initial={{opacity:0,y:14}} animate={{opacity:1,y:0}} exit={{opacity:0,y:10}} transition={{duration:.22}} className="product-card group overflow-hidden rounded-2xl border border-slate-200/80 bg-white transition duration-300 hover:-translate-y-1 hover:shadow-soft">
