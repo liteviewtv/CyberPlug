@@ -40,3 +40,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .product-card:hover .product-image { transform: scale(1.055); }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+
+.input { width:100%; min-height:44px; border:1px solid #e2e8f0; border-radius:12px; padding:10px 12px; color:#0f172a; background:#fff; outline:none; font:inherit; }
+.input:focus { border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.12); }
