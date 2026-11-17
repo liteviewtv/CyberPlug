@@ -5,8 +5,6 @@ import Header from './components/Header'
 import ProductGrid from './components/ProductGrid'
 import { mockProducts } from './data/products'
 
-const categories = ['All products', ...new Set(mockProducts.map((product) => product.category))]
-
 export default function App() {
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -75,6 +73,8 @@ export default function App() {
     window.addEventListener('keydown', handleShortcut)
     return () => window.removeEventListener('keydown', handleShortcut)
   }, [])
+
+  const categories = useMemo(() => ['All products', ...new Set(products.map((product) => product.category).filter(Boolean))], [products])
 
   const filteredProducts = useMemo(() => {
     const result = products.filter((product) => {
