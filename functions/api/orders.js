@@ -45,3 +45,14 @@ export async function onRequestPost({request,env}) {
  }
  return json({ok:true,order:{id,order_number:orderNumber,email,subtotal,total:subtotal,status:'pending'}},201)
 }
+
+
+export async function onRequestPatch({request,env}) {
+ if(!await requireAdmin(request,env))return json({error:'Unauthorized'},401)
+ const body=await request.json().catch(()=>null)
+ const id=text(body?.id),status=text(body?.status)
+ if(!id||!['pending','processing','completed','cancelled'].includes(status))return json({error:'Invalid order update.'},400)
+ const result=await env.DB.prepare('UPDATE orders SET status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(status,id).run()
+ if(result.meta?.changes!==1)return json({error:'Order not found.'},404)
+ return json({ok:true})
+}
