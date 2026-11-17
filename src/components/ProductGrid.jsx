@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { PackageSearch } from 'lucide-react'
 import ProductCard from './ProductCard'
 
-export default function ProductGrid({ products, onAddToCart, loading }) {
+export default function ProductGrid({ products, onAddToCart, onViewProduct, loading }) {
   if (loading) {
     return (
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -29,7 +29,7 @@ export default function ProductGrid({ products, onAddToCart, loading }) {
   return (
     <motion.div layout className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <AnimatePresence mode="popLayout">
-        {products.map((product) => <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />)}
+        {products.map((product) => <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} onViewProduct={onViewProduct} />)}
       </AnimatePresence>
     </motion.div>
   )
