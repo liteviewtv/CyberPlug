@@ -39,5 +39,5 @@ export default function Admin(){
  </form></div></div>}
  </div>
 }
-function Field({label,children}){return <label className="block text-sm font-semibold text-slate-700">{label}<div className="mt-2">{children}</div></label>}
+function Field({label,children}){return <div className="block text-sm font-semibold text-slate-700"><span>{label}</span><div className="mt-2">{children}</div></div>}
 function Stat({label,value}){return <div className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-xs font-semibold text-slate-500">{label}</p><p className="mt-2 text-2xl font-bold text-slate-950">{value}</p></div>}
