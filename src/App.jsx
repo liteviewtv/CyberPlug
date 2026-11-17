@@ -4,13 +4,14 @@ import { AnimatePresence, motion } from 'framer-motion'
 import Header from './components/Header'
 import ProductGrid from './components/ProductGrid'
 import CartDrawer from './components/CartDrawer'
+import Checkout from './components/Checkout'
 import Admin from './Admin'
 
 const readCart=()=>{try{return JSON.parse(localStorage.getItem('cyberplug-cart')||'[]')}catch{return []}}
 export default function App() {
   if (window.location.pathname.startsWith('/admin')) return <Admin />
   const [search,setSearch]=useState(''),[debouncedSearch,setDebouncedSearch]=useState(''),[category,setCategory]=useState('All products'),[sort,setSort]=useState('featured')
-  const [products,setProducts]=useState([]),[loading,setLoading]=useState(true),[cart,setCart]=useState(readCart),[cartOpen,setCartOpen]=useState(false),[toast,setToast]=useState('')
+  const [products,setProducts]=useState([]),[loading,setLoading]=useState(true),[cart,setCart]=useState(readCart),[cartOpen,setCartOpen]=useState(false),[checkoutOpen,setCheckoutOpen]=useState(false),[toast,setToast]=useState('')
   useEffect(()=>{const t=setTimeout(()=>setDebouncedSearch(search.trim().toLowerCase()),300);return()=>clearTimeout(t)},[search])
   useEffect(()=>{const controller=new AbortController();fetch('/api/products',{signal:controller.signal}).then(r=>{if(!r.ok)throw new Error('Catalog unavailable');return r.json()}).then(d=>setProducts((d.products||[]).filter(p=>p.status==='active'))).catch(e=>{if(e.name!=='AbortError')console.error(e)}).finally(()=>setLoading(false));return()=>controller.abort()},[])
   useEffect(()=>{localStorage.setItem('cyberplug-cart',JSON.stringify(cart))},[cart])
@@ -30,7 +31,8 @@ export default function App() {
       {loading?<div className="py-20 text-center text-sm text-slate-500">Loading products…</div>:<ProductGrid products={filtered} onAddToCart={addToCart}/>}</section>
       <footer className="mt-16 flex flex-col justify-between gap-3 border-t border-slate-200 pt-6 text-xs text-slate-400 sm:flex-row"><span className="font-display text-sm font-bold text-slate-700">Cyber<span className="text-electric">Plug</span></span><span>© {new Date().getFullYear()} CyberPlug.</span><a href="/admin" className="hover:text-slate-700">Store admin</a></footer>
     </main>
-    <CartDrawer open={cartOpen} onClose={()=>setCartOpen(false)} items={cart} onUpdate={updateQuantity} onRemove={removeFromCart}/>
+    <CartDrawer open={cartOpen} onClose={()=>setCartOpen(false)} items={cart} onUpdate={updateQuantity} onRemove={removeFromCart} onCheckout={()=>{setCartOpen(false);setCheckoutOpen(true)}}/>
+    {checkoutOpen&&<Checkout items={cart} onClose={()=>setCheckoutOpen(false)} onSuccess={()=>{setCart([]);localStorage.removeItem("cyberplug-cart")}}/>}
     <AnimatePresence>{toast&&<motion.div initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} exit={{opacity:0}} className="fixed bottom-5 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-xs font-semibold text-white shadow-2xl"><Check size={15}/>{toast}</motion.div>}</AnimatePresence>
   </div>
 }
