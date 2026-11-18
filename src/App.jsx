@@ -9,8 +9,33 @@ import Checkout from './components/Checkout'
 import Admin from './Admin'
 
 const readCart=()=>{try{return JSON.parse(localStorage.getItem('cyberplug-cart')||'[]')}catch{return []}}
+function PaymentReturn(){
+ const orderId=new URLSearchParams(window.location.search).get('order_id')||''
+ const [order,setOrder]=useState(null),[error,setError]=useState(''),[checking,setChecking]=useState(true)
+ const refresh=async()=>{
+  if(!orderId){setError('The order reference is missing. Please contact support with your order number.');setChecking(false);return}
+  try{const r=await fetch('/api/payments/status?order_id='+encodeURIComponent(orderId),{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.error||'Unable to check this order.');setOrder(d.order);setError('')}
+  catch(e){setError(e.message)}
+  finally{setChecking(false)}
+ }
+ useEffect(()=>{refresh();const timer=setInterval(refresh,5000);return()=>clearInterval(timer)},[])
+ const paid=order?.payment_status==='paid'
+ const pending=['paying','unpaid'].includes(order?.payment_status)
+ return <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-12"><section className="w-full max-w-lg rounded-3xl border border-slate-100 bg-white p-7 text-center shadow-xl sm:p-10">
+  <div className={'mx-auto flex h-16 w-16 items-center justify-center rounded-full '+(paid?'bg-emerald-100 text-emerald-700':pending?'bg-amber-100 text-amber-700':'bg-red-100 text-red-700')}><CheckCircle2 size={32}/></div>
+  <p className="mt-6 text-xs font-bold uppercase tracking-[.2em] text-blue-600">CyberPlug payment</p>
+  <h1 className="mt-2 text-2xl font-bold text-slate-950">{paid?'Payment confirmed':pending?'Checking your payment':'Payment status'}</h1>
+  <p className="mt-3 text-sm leading-6 text-slate-500">{paid?'Your payment has been confirmed. Your order is now marked as paid.':pending?'We are waiting for OxaPay to confirm the transaction. This page checks automatically; please do not pay again while the status is pending.':error||'We could not confirm this payment yet. Please contact support before trying another payment.'}</p>
+  {order&&<div className="mt-7 rounded-2xl bg-slate-50 p-4 text-left text-sm"><div className="flex justify-between gap-3 py-2"><span className="text-slate-500">Order</span><strong className="text-slate-900">{order.order_number}</strong></div><div className="flex justify-between gap-3 py-2"><span className="text-slate-500">Email</span><strong className="break-all text-right text-slate-900">{order.email}</strong></div><div className="flex justify-between gap-3 py-2"><span className="text-slate-500">Total</span><strong className="text-slate-900">{money(order.total)}</strong></div><div className="flex justify-between gap-3 border-t border-slate-200 pt-3"><span className="text-slate-500">Payment</span><strong className={paid?'text-emerald-700':'text-amber-700'}>{String(order.payment_status||'unpaid').toUpperCase()}</strong></div></div>}
+  {checking&&<p className="mt-4 text-xs text-slate-400">Checking with CyberPlug…</p>}
+  <button onClick={refresh} className="mt-7 w-full rounded-xl bg-slate-950 px-5 py-3.5 text-sm font-bold text-white hover:bg-blue-700">Refresh payment status</button>
+  <a href="/" className="mt-4 inline-block text-sm font-semibold text-slate-500 hover:text-slate-900">Return to store</a>
+ </section></main>
+}
+const money=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(Number(n)||0)
 export default function App() {
   if (window.location.pathname.startsWith('/admin')) return <Admin />
+  if (new URLSearchParams(window.location.search).get('payment') === 'return') return <PaymentReturn />
   const [search,setSearch]=useState(''),[debouncedSearch,setDebouncedSearch]=useState(''),[category,setCategory]=useState('All products'),[sort,setSort]=useState('featured')
   const [products,setProducts]=useState([]),[loading,setLoading]=useState(true),[cart,setCart]=useState(readCart),[cartOpen,setCartOpen]=useState(false),[checkoutOpen,setCheckoutOpen]=useState(false),[toast,setToast]=useState('')
   const [selectedProductId,setSelectedProductId]=useState(()=>decodeURIComponent(window.location.pathname.startsWith('/product/')?window.location.pathname.slice('/product/'.length):''))
