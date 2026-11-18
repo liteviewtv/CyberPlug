@@ -23,9 +23,9 @@ export default function App() {
   useEffect(()=>{if(!toast)return;const t=setTimeout(()=>setToast(''),2200);return()=>clearTimeout(t)},[toast])
   const categories=useMemo(()=>['All products',...new Set(products.map(p=>p.category).filter(Boolean))],[products])
   const filtered=useMemo(()=>{const result=products.filter(p=>{const text=[p.name,p.description,p.category,...(p.tags||[])].join(' ').toLowerCase();return(!debouncedSearch||text.includes(debouncedSearch))&&(category==='All products'||p.category===category)});if(sort==='price-asc')result.sort((a,b)=>a.price-b.price);if(sort==='price-desc')result.sort((a,b)=>b.price-a.price);if(sort==='newest')result.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));return result},[products,debouncedSearch,category,sort])
-  const addToCart=p=>{setCart(current=>{const found=current.find(x=>x.id===p.id);if(found)return current.map(x=>x.id===p.id?{...x,quantity:Math.min(Number(p.stock)||1,x.quantity+1)}:x);return [...current,{...p,quantity:1}]});setToast(p.name+' added to your bag')}
-  const updateQuantity=(id,quantity)=>setCart(current=>current.map(x=>x.id===id?{...x,quantity}:x).filter(x=>x.quantity>0))
-  const removeFromCart=id=>setCart(current=>current.filter(x=>x.id!==id))
+  const addToCart=p=>{setCart(current=>{const key=p.cartKey||p.id,found=current.find(x=>(x.cartKey||x.id)===key);if(found)return current.map(x=>(x.cartKey||x.id)===key?{...x,quantity:Math.min(Number(p.stock)||1,x.quantity+1)}:x);return [...current,{...p,quantity:1}]});setToast(p.name+' added to your bag')}
+  const updateQuantity=(id,quantity)=>setCart(current=>current.map(x=>(x.cartKey||x.id)===id?{...x,quantity}:x).filter(x=>x.quantity>0))
+  const removeFromCart=id=>setCart(current=>current.filter(x=>(x.cartKey||x.id)!==id))
   const cartCount=cart.reduce((n,p)=>n+p.quantity,0)
   const selectedProduct=products.find(p=>String(p.id)===selectedProductId)
   return <div className="page-shell min-h-screen"><Header search={search} setSearch={setSearch} cartCount={cartCount} onOpenCart={()=>setCartOpen(true)}/>
