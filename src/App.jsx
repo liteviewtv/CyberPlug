@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowDownUp, ArrowRight, Check, Headphones, ShieldCheck, Truck } from 'lucide-react'
+import { ArrowDownUp, ArrowRight, Check, CheckCircle2, Headphones, ShieldCheck, Truck } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import Header from './components/Header'
 import ProductGrid from './components/ProductGrid'
