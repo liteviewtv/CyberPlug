@@ -10,7 +10,7 @@ export async function onRequestPost({request,env}) {
  if(order.payment_status==='paid')return json({error:'This order has already been paid.'},409)
  if(order.payment_track_id&&order.payment_url&&order.payment_status!=='expired'&&order.payment_status!=='failed')return json({paymentUrl:order.payment_url,trackId:order.payment_track_id,orderNumber:order.order_number})
  const origin=new URL(request.url).origin
- const payload={amount:Number(order.total),lifetime:60,fee_paid_by_payer:1,callback_url:origin+'/api/payments/webhook',return_url:origin+'/?payment=return',email:order.email,order_id:order.id,description:'CyberPlug order '+order.order_number,sandbox:true}
+ const payload={amount:Number(order.total),lifetime:60,fee_paid_by_payer:1,callback_url:origin+'/api/payments/webhook',return_url:origin+'/?payment=return&order_id='+encodeURIComponent(order.id),email:order.email,order_id:order.id,description:'CyberPlug order '+order.order_number,sandbox:true}
  let response,data
  try{
   response=await fetch('https://api.oxapay.com/v1/payment/invoice',{method:'POST',headers:{'merchant_api_key':env.OXAPAY_API_KEY,'Content-Type':'application/json'},body:JSON.stringify(payload)})
