@@ -19,8 +19,8 @@ export async function onRequestPost({request,env}){
  if(!order||order.payment_provider!=='oxapay'||String(order.payment_track_id)!==String(data.track_id))return json('order mismatch',400)
  const status=String(data.status||'').toLowerCase()
  if(status==='paid'){
-  const paidAmount=Number(data.amount)
-  if(!Number.isFinite(paidAmount)||paidAmount+0.000001<Number(order.total))return json('amount mismatch',400)
+  const paidValue=Number(data.value)
+  if(!Number.isFinite(paidValue)||paidValue+0.000001<Number(order.total))return json('amount mismatch',400)
   await env.DB.prepare("UPDATE orders SET payment_status='paid',updated_at=CURRENT_TIMESTAMP WHERE id=? AND payment_status!='paid'").bind(order.id).run()
  }else if(status==='paying'){
   await env.DB.prepare("UPDATE orders SET payment_status='paying',updated_at=CURRENT_TIMESTAMP WHERE id=? AND payment_status!='paid'").bind(order.id).run()
